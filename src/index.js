@@ -6,7 +6,10 @@ const cors=require('cors');
 const port = process.env.PORT;
 const allRoutes = require('./routes/route.js');
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "*", // your frontend URL
+  credentials: true
+}))
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });

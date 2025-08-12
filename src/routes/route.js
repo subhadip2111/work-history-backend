@@ -4,7 +4,7 @@ const router = express.Router();
 const projectController = require('../Controller/projectController');
 const userController = require('../Controller/userController');
 const userActivityController = require('../Controller/userActivityController');
-
+const aiController=require('../Controller/ai.controller')
 // Route to add a new project
 router.post('/organization/project', projectController.addNewProject);
 
@@ -35,5 +35,5 @@ router.post('/useractivity/:githubId',userActivityController.insertUserActivity 
 
 router.get('/useractivity/:githubId',userActivityController.getUserActivity );
 
-
+router.post('/generate/task/:projctId',aiController.generateModule)
 module.exports = router;    
