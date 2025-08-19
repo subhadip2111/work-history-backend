@@ -2,7 +2,7 @@ const { ProjectModel } = require("../models/project.model");
 
 const mongoose = require('mongoose');
 
-const addNewProject=async(req, res) => {
+const addNewProject = async (req, res) => {
   try {
     const projectData = req.body;
     console.log("Project Data:", projectData);
@@ -10,15 +10,15 @@ const addNewProject=async(req, res) => {
     res.status(201).json({ message: 'Project created successfully', project: newProject });
   } catch (error) {
     res.status(500).json({ message: 'Error creating project', error: error.message });
-  } 
+  }
 }
 
 const getALlProjects = async (req, res) => {
-    const createorId=await req.params._id; 
+  const createorId = await req.params._id;
   try {
     const projects = await ProjectModel.find({
-        'createdBy': createorId 
-    }).sort({ createdAt: -1 }); 
+      'createdBy': createorId,
+    }).sort({ createdAt: -1 });
     res.status(200).json({ message: 'Projects retrieved successfully', projects });
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving projects', error: error.message });
@@ -65,10 +65,26 @@ const getProjectById = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving project', error: error.message });
   }
 }
+
+
+const getOrganizationAllProjects = async (req, res) => {
+  // const createorId = req.params.adminId;
+  const organizationId = req.params.organizationId;
+  try {
+    const projects = await ProjectModel.find({
+      // 'createdBy': createorId,
+      'organizationId': organizationId
+    }).sort({ createdAt: -1 });
+    res.status(200).json({ message: 'Projects retrieved successfully', projects });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving projects', error: error.message });
+  }
+}
+
 module.exports = {
   addNewProject,
   getALlProjects,
   getProjectById,
-  getMyProjects
-  // Other controller methods can be added here
+  getMyProjects,
+  getOrganizationAllProjects
 };

@@ -1,3 +1,4 @@
+const { ProjectModel } = require('../models/project.model');
 const UserModel = require('../models/user.model');
 
 
@@ -38,7 +39,6 @@ const getAllMembers = async (req, res) => {
                 }
             },
 
-            workHistoryRole: "member"
 
         }).sort({ createdAt: -1 });
 
@@ -82,23 +82,45 @@ const getDeveloperInfo = async (req, res) => {
 }
 const getDeveloperInfobyId = async (req, res) => {
     try {
-        const id = req.params.id; 
-        console.log("id",id)
+        const id = req.params.id;
+        console.log("id", id)
         const user = await UserModel.findOne({ _id: id });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-     return    res.status(200).json({ message: 'User retrieved successfully', user });
+        return res.status(200).json({ message: 'User retrieved successfully', user });
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving user', error: error.message });
     }
 }
 
+const getDashBoardData = async (req, res) => {
+    try {
+        const organizationId = req.params.organizationId;
+        // const adminId = req.params.adminId;
+
+
+        const getTotalproject = await ProjectModel.find({ organizationId: organizationId })
+        const members = await UserModel.find({
+            organizations: {
+                $elemMatch: {
+                    organizationId: organizationId,
+                }
+            },
+        })
+
+
+        return res.status(200).json({ message: 'Dashboard data retrived ',data:{totalProject:getTotalproject.length,totalMember:members.length }});
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving user', error: error.message });
+    }
+}
 module.exports = {
     registerUser,
     getAllMembers,
     getAdminInfobyToken,
     getDeveloperInfo,
-    getDeveloperInfobyId
+    getDeveloperInfobyId,
+    getDashBoardData
     // Other user controller methods can be added here
 };
