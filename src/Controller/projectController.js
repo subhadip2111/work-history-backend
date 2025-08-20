@@ -81,10 +81,55 @@ const getOrganizationAllProjects = async (req, res) => {
   }
 }
 
+
+
+const getProjectDashboardData = async (req, res) => {
+  try {
+    const organizationId = req.params.organizationId;
+
+    const analyticsData = await ProjectModel.aggregate([
+      {
+        $match: {
+          organizationId: organizationId
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalBudget: { $sum: "$budget" },
+          totalProjects: { $sum: 1 },
+          activeProjects: {
+            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
+          },
+          completeProjects: {
+            $sum: { $cond: [{ $eq: ["$status", "complete"] }, 1, 0] }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalBudget: 1,
+          totalProjects: 1,
+          activeProjects: 1,
+          completeProjects: 1
+        }
+      }
+    ]);
+
+    console.log("analyticsData", analyticsData);
+    res.json(analyticsData[0] || {});
+  } catch (error) {
+    console.error("Error in getProjectDashboardData:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   addNewProject,
   getALlProjects,
   getProjectById,
   getMyProjects,
-  getOrganizationAllProjects
+  getOrganizationAllProjects,
+  getProjectDashboardData
 };

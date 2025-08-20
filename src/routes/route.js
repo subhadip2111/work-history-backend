@@ -17,6 +17,9 @@ router.get('/projects/:id', projectController.getALlProjects);
 
 // Route to get a project by its ID
  router.get('/project/:id', projectController.getProjectById);
+router.get('/projects/dashboard/organization/:organizationId', projectController.getProjectDashboardData);
+
+
 
 // add the user controller routes here
 
