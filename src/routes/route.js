@@ -16,8 +16,10 @@ router.get('/projects/:id', projectController.getALlProjects);
  router.get('/my-projects/:id', projectController.getMyProjects);
 
 // Route to get a project by its ID
- router.get('/project/:id', projectController.getProjectById);
+ router.get('/project-details/:id', projectController.getProjectById);
 router.get('/projects/dashboard/organization/:organizationId', projectController.getProjectDashboardData);
+router.post('/project/generate/task/:projectId',aiController.generateModule)
+router.get('/project/generate/task/:projectId',aiController.getModulesAndTasks)
 
 
 
@@ -42,5 +44,4 @@ router.post('/useractivity/:githubId',userActivityController.insertUserActivity 
 
 router.get('/useractivity/:githubId',userActivityController.getUserActivity );
 
-router.post('/generate/task/:projctId',aiController.generateModule)
 module.exports = router;    
