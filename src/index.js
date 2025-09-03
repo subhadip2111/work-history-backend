@@ -43,7 +43,7 @@ app.post("/github/webhook", (req, res) => {
 
   const event = req.headers["x-github-event"];
   const payload = req.body;
-
+console.log("payload",payload)
   switch (event) {
     case "push":
       console.log(`📦 Push by ${payload.pusher.name} in ${payload.repository.full_name}`);
