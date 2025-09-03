@@ -128,26 +128,47 @@ const linkToGithub = async (req, res) => {
   const octokit = new Octokit({ auth: githubToken });
 
   try {
-    let page = 1;
-const per_page = 100;
-    // List repos user has access to
+    // Get all repos where user has admin access
     const { data: repos } = await octokit.repos.listForAuthenticatedUser({
-    visibility: "all",         // public + private
-    affiliation: "owner,collaborator",
-    per_page,
-    page,
+      per_page: 100,
     });
-console.log("data",repos)
+
     const createdWebhooks = [];
+    const skippedRepos = [];
     const failedRepos = [];
 
     for (const repo of repos) {
+      if (!repo.permissions.admin) {
+        continue; // only allow repos where user is admin
+      }
+
       try {
+        // 1️⃣ Get existing hooks
+        const { data: hooks } = await octokit.repos.listWebhooks({
+          owner: repo.owner.login,
+          repo: repo.name,
+        });
+
+        const alreadyExists = hooks.find(
+          (hook) =>
+            hook.config.url === `${process.env.DEV_URL}/github/webhook`
+        );
+
+        if (alreadyExists) {
+          console.log(`⚠️ Webhook already exists for ${repo.full_name}`);
+          skippedRepos.push({
+            repo: repo.full_name,
+            webhookId: alreadyExists.id,
+          });
+          continue; // skip creating new
+        }
+
+        // 2️⃣ Create webhook if not exists
         const response = await octokit.repos.createWebhook({
           owner: repo.owner.login,
           repo: repo.name,
           config: {
-            url: `${process.env.DEV_URL}/github/webhook`, // should point to your webhook endpoint
+            url: `${process.env.DEV_URL}/github/webhook`,
             content_type: "json",
             secret: process.env.GITHUB_WEBHOOK_SECRET,
             insecure_ssl: "0",
@@ -170,17 +191,18 @@ console.log("data",repos)
       }
     }
 
-    // Respond with only the successful repos, and optionally list skipped ones
     res.json({
       success: true,
-      webhooks: createdWebhooks,
-      skipped: failedRepos.length > 0 ? failedRepos : undefined,
+      created: createdWebhooks,
+      skipped: skippedRepos,
+      failed: failedRepos,
     });
   } catch (err) {
     console.error("GitHub API error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 module.exports = {
     registerUser,
