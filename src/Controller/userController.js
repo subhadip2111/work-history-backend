@@ -118,7 +118,7 @@ const getDashBoardData = async (req, res) => {
 }
 
 
-const linkToGithub= async (req, res) => {
+const linkToGithub = async (req, res) => {
   const { uid, githubToken } = req.body;
 
   if (!uid || !githubToken) {
@@ -134,6 +134,7 @@ const linkToGithub= async (req, res) => {
     });
 
     const createdWebhooks = [];
+    const failedRepos = [];
 
     for (const repo of repos) {
       try {
@@ -141,9 +142,10 @@ const linkToGithub= async (req, res) => {
           owner: repo.owner.login,
           repo: repo.name,
           config: {
-            url: process.env.DEV_URL, 
+            url: `${process.env.DEV_URL}/github/webhook`, // should point to your webhook endpoint
             content_type: "json",
             secret: process.env.GITHUB_WEBHOOK_SECRET,
+            insecure_ssl: "0",
           },
           events: ["push", "pull_request", "create"],
         });
@@ -156,16 +158,25 @@ const linkToGithub= async (req, res) => {
         console.log(`✅ Webhook created for ${repo.full_name}`);
       } catch (err) {
         console.error(`❌ Failed for ${repo.full_name}:`, err.message);
+        failedRepos.push({
+          repo: repo.full_name,
+          error: err.message,
+        });
       }
     }
 
-    // Store mapping { uid -> repos + webhookIds } in DB (skipped here)
-    res.json({ success: true, webhooks: createdWebhooks });
+    // Respond with only the successful repos, and optionally list skipped ones
+    res.json({
+      success: true,
+      webhooks: createdWebhooks,
+      skipped: failedRepos.length > 0 ? failedRepos : undefined,
+    });
   } catch (err) {
     console.error("GitHub API error:", err);
     res.status(500).json({ error: err.message });
   }
-}
+};
+
 module.exports = {
     registerUser,
     getAllMembers,

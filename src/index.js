@@ -5,9 +5,6 @@ require('dotenv').config();
 const cors=require('cors');
 const port = process.env.PORT;
 const crypto = require("crypto");
-const { Octokit } = require("@octokit/rest");
-
-
 const allRoutes = require('./routes/route.js');
 app.use(express.json());
 app.use(cors({
