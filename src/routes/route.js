@@ -21,7 +21,7 @@ router.get('/projects/dashboard/organization/:organizationId', projectController
 router.post('/project/generate/task/:projectId',aiController.generateModule)
 router.get('/project/generate/task/:projectId',aiController.getModulesAndTasks)
 
-
+router.post('/link-github',userController.linkToGithub)
 
 // add the user controller routes here
 

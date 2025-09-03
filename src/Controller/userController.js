@@ -1,6 +1,7 @@
 const { ProjectModel } = require('../models/project.model');
 const UserModel = require('../models/user.model');
 
+const { Octokit } = require("@octokit/rest");
 
 const registerUser = async (req, res) => {
     try {
@@ -115,12 +116,63 @@ const getDashBoardData = async (req, res) => {
         res.status(500).json({ message: 'Error retrieving user', error: error.message });
     }
 }
+
+
+const linkToGithub= async (req, res) => {
+  const { uid, githubToken } = req.body;
+
+  if (!uid || !githubToken) {
+    return res.status(400).json({ error: "Missing uid or githubToken" });
+  }
+
+  const octokit = new Octokit({ auth: githubToken });
+
+  try {
+    // List repos user has access to
+    const { data: repos } = await octokit.repos.listForAuthenticatedUser({
+      per_page: 5, // limit for demo, adjust as needed
+    });
+
+    const createdWebhooks = [];
+
+    for (const repo of repos) {
+      try {
+        const response = await octokit.repos.createWebhook({
+          owner: repo.owner.login,
+          repo: repo.name,
+          config: {
+            url: process.env.DEV_URL, 
+            content_type: "json",
+            secret: process.env.GITHUB_WEBHOOK_SECRET,
+          },
+          events: ["push", "pull_request", "create"],
+        });
+
+        createdWebhooks.push({
+          repo: repo.full_name,
+          webhookId: response.data.id,
+        });
+
+        console.log(`✅ Webhook created for ${repo.full_name}`);
+      } catch (err) {
+        console.error(`❌ Failed for ${repo.full_name}:`, err.message);
+      }
+    }
+
+    // Store mapping { uid -> repos + webhookIds } in DB (skipped here)
+    res.json({ success: true, webhooks: createdWebhooks });
+  } catch (err) {
+    console.error("GitHub API error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
 module.exports = {
     registerUser,
     getAllMembers,
     getAdminInfobyToken,
     getDeveloperInfo,
     getDeveloperInfobyId,
-    getDashBoardData
+    getDashBoardData,
+    linkToGithub
     // Other user controller methods can be added here
 };
