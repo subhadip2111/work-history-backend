@@ -128,11 +128,16 @@ const linkToGithub = async (req, res) => {
   const octokit = new Octokit({ auth: githubToken });
 
   try {
+    let page = 1;
+const per_page = 100;
     // List repos user has access to
     const { data: repos } = await octokit.repos.listForAuthenticatedUser({
-      per_page: 5, // limit for demo, adjust as needed
+    visibility: "all",         // public + private
+    affiliation: "owner,collaborator",
+    per_page,
+    page,
     });
-
+console.log("data",repos)
     const createdWebhooks = [];
     const failedRepos = [];
 
